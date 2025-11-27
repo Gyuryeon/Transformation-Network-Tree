@@ -51,8 +51,13 @@
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      outDir: 'dist',
     },
+    // Base path for GitHub Pages - update this to match your repository name
+    // If your repo is "christmas-tree-app", change to '/christmas-tree-app/'
+    base: process.env.NODE_ENV === 'production' 
+      ? (process.env.VITE_BASE_PATH || '/Christmastreedesign-main/') 
+      : '/',
     server: {
       port: 3000,
       open: true,

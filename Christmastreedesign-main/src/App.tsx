@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChristmasTree } from "./components/christmas-tree";
 import { SnowEffect } from "./components/snow-effect";
+import { fetchOrnaments, updateOrnamentText, initializeOrnaments, type Ornament } from "./api";
 
 export default function App() {
-  const [ornaments, setOrnaments] = useState<
-    {
-      id: number;
-      text: string;
-      x: number;
-      y: number;
-      color: string;
-    }[]
-  >(() => generateOrnaments());
+  const [ornaments, setOrnaments] = useState<Ornament[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Deterministic seeded random number generator
+  function seededRandom(seed: number) {
+    let value = seed;
+    return () => {
+      value = (value * 9301 + 49297) % 233280;
+      return value / 233280;
+    };
+  }
 
   function generateOrnaments() {
     const ornamentColors = [
@@ -26,6 +30,8 @@ export default function App() {
     ];
 
     const ornaments = [];
+    // Use a fixed seed for consistent layout
+    const random = seededRandom(12345);
 
     // Helper function to check if a point is inside the tree triangles
     const isInsideTree = (x: number, y: number) => {
@@ -74,19 +80,44 @@ export default function App() {
       });
     };
 
-    // Generate 200 ornaments within the tree shape
+    // Generate ornaments with deterministic positions
+    // Use a grid-based approach for better distribution
+    const targetCount = 250;
     let attempts = 0;
-    while (ornaments.length < 250 && attempts < 800) {
-      const x = 2 + Math.random() * 90; // Random x between 10-90
-      const y = 16 + Math.random() * 61; // Random y between 8-77
+    let id = 0;
+    
+    // Try grid-based positions first for better distribution
+    for (let layer = 0; layer < 15 && ornaments.length < targetCount; layer++) {
+      const yBase = 20 + layer * 4;
+      const maxWidth = 30 + layer * 2;
+      const xSpacing = Math.max(2.5, maxWidth / 8);
+      
+      for (let xOffset = -maxWidth / 2; xOffset <= maxWidth / 2 && ornaments.length < targetCount; xOffset += xSpacing) {
+        const x = 50 + xOffset + (random() - 0.5) * 1.5; // Add slight variation
+        const y = yBase + (random() - 0.5) * 2;
+        
+        if (isInsideTree(x, y) && !hasCollision(x, y)) {
+          const color = ornamentColors[id % ornamentColors.length];
+          ornaments.push({
+            id: id++,
+            text: "",
+            x,
+            y,
+            color,
+          });
+        }
+      }
+    }
+    
+    // Fill remaining spots with random positions if needed
+    while (ornaments.length < targetCount && attempts < 1000) {
+      const x = 2 + random() * 90;
+      const y = 16 + random() * 61;
 
       if (isInsideTree(x, y) && !hasCollision(x, y)) {
-        const color =
-          ornamentColors[
-            Math.floor(Math.random() * ornamentColors.length)
-          ];
+        const color = ornamentColors[id % ornamentColors.length];
         ornaments.push({
-          id: ornaments.length,
+          id: id++,
           text: "",
           x,
           y,
@@ -99,12 +130,61 @@ export default function App() {
     return ornaments;
   }
 
-  const updateOrnamentText = (id: number, text: string) => {
+  // Load ornaments on mount
+  useEffect(() => {
+    async function loadOrnaments() {
+      try {
+        const data = await fetchOrnaments();
+        
+        if (data.ornaments && data.ornaments.length > 0) {
+          // Use saved ornaments from backend - these have consistent positions
+          setOrnaments(data.ornaments);
+          setIsInitialized(true);
+          setIsLoading(false);
+        } else {
+          // Backend is empty - generate deterministic layout and save it
+          const generated = generateOrnaments();
+          setOrnaments(generated);
+          setIsLoading(false);
+          // Save to backend - this ensures positions are saved
+          try {
+            await initializeOrnaments(generated);
+            setIsInitialized(true);
+          } catch (initError) {
+            console.error('Failed to initialize ornaments on backend:', initError);
+            // Still mark as initialized so UI works
+            setIsInitialized(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading ornaments:', error);
+        // Fallback to generated ornaments if API fails
+        // These will have consistent positions due to seeded random
+        const generated = generateOrnaments();
+        setOrnaments(generated);
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
+    }
+    
+    loadOrnaments();
+  }, []);
+
+  const updateOrnamentTextHandler = async (id: number, text: string) => {
+    // Optimistically update UI
     setOrnaments((prev) =>
       prev.map((ornament) =>
         ornament.id === id ? { ...ornament, text } : ornament,
       ),
     );
+    
+    // Save to backend
+    try {
+      await updateOrnamentText(id, text);
+    } catch (error) {
+      console.error('Failed to save ornament text:', error);
+      // Optionally revert on error
+    }
   };
 
   return (
@@ -133,10 +213,16 @@ export default function App() {
           </div>
         </div>
 
-        <ChristmasTree
-          ornaments={ornaments}
-          onUpdateOrnament={updateOrnamentText}
-        />
+        {isLoading ? (
+          <div className="text-center text-[#fef3c7] py-20">
+            <p>Loading your Christmas tree...</p>
+          </div>
+        ) : (
+          <ChristmasTree
+            ornaments={ornaments}
+            onUpdateOrnament={updateOrnamentTextHandler}
+          />
+        )}
       </div>
     </div>
   );
