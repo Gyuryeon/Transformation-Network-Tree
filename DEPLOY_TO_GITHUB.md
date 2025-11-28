@@ -24,7 +24,7 @@ git commit -m "Initial commit - Christmas Tree app with backend"
 
 1. Go to [GitHub.com](https://github.com) and sign in
 2. Click the **"+"** icon → **"New repository"**
-3. Repository name: `Christmastreedesign` (or any name you like)
+3. Repository name: `Transformation-Network-Tree` (or any name you like)
 4. Make it **Public** (required for free GitHub Pages)
 5. **Don't** initialize with README (you already have files)
 6. Click **"Create repository"**
@@ -34,7 +34,7 @@ git commit -m "Initial commit - Christmas Tree app with backend"
 GitHub will show you commands. Run these:
 
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/Christmastreedesign.git
+git remote add origin https://github.com/YOUR_USERNAME/Transformation-Network-Tree.git
 git branch -M main
 git push -u origin main
 ```
@@ -55,7 +55,7 @@ Replace `YOUR_USERNAME` with your GitHub username.
 
 1. Click **"New +"** → **"Web Service"**
 2. Connect your GitHub repository
-3. Select your `Christmastreedesign` repository
+3. Select your `Transformation-Network-Tree` repository
 4. Configure:
    - **Name**: `christmas-tree-backend`
    - **Root Directory**: `server` ⚠️ **IMPORTANT!**
@@ -135,10 +135,10 @@ git push origin main
 
 Your site will be available at:
 ```
-https://YOUR_USERNAME.github.io/Christmastreedesign/
+https://YOUR_USERNAME.github.io/Transformation-Network-Tree/
 ```
 
-Replace `YOUR_USERNAME` with your GitHub username (e.g., `gyuryeon.github.io/Christmastreedesign/`)
+Replace `YOUR_USERNAME` with your GitHub username (e.g., `gyuryeon.github.io/Transformation-Network-Tree/`)
 
 ---
 

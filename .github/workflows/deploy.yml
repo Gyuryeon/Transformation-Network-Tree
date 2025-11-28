@@ -35,7 +35,7 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://christmastreedesign.onrender.com/api' }}
-          VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH || '/Christmastreedesign/' }}
+          VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH || '/Transformation-Network-Tree/' }}
           NODE_ENV: production
 
       - name: Setup Pages
