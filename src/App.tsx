@@ -201,13 +201,13 @@ export default function App() {
                 fontStyle: 'bold',
                 fontSize: '23px'
               }}>
-                🎄 Transformation Compliment Tree 🎄
+                🎄 Transformation Network Tree 🎄
               </h1>
               <p className="text-center text-[#fde68a] mb-0 max-w-2xl mx-auto drop-shadow-lg" style={{
                 textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
                 fontFamily: 'HEINEKEN core'
               }}>
-                Click an ornament to compliment someone. Optionally, write your name.
+                Click an ornament to leave a good wish/compliment to anybody in the transformation network. Don't forget to write on the text their name, and if you want, your name (otherwise it will show as anonymous). You can save and edit the message later.
               </p>
             </div>
           </div>
