@@ -34,7 +34,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://your-backend-url.up.railway.app/api' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://your-backend-url.onrender.com/api' }}
           VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH || '/Transformation-Network-Tree/' }}
           NODE_ENV: production
 

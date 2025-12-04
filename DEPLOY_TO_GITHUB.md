@@ -43,75 +43,100 @@ Replace `YOUR_USERNAME` with your GitHub username.
 
 ---
 
-## Step 2: Deploy Backend to Railway (Free with Persistent Storage!)
+## Step 2: Deploy Backend to Render + MongoDB Atlas (Free & Persistent!)
 
-### 2.1 Sign Up for Railway
+### 2.1 Set Up MongoDB Atlas (Free Database)
 
-1. Go to [Railway.app](https://railway.app)
-2. Click **"Start a New Project"** or **"Login"**
+1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Sign up for a free account
+3. Create a **Free Cluster** (M0 - Shared)
+4. Choose a cloud provider and region (closest to you)
+5. Click **"Create Cluster"** (takes 3-5 minutes)
+
+### 2.2 Configure MongoDB Atlas
+
+1. **Create Database User:**
+   - Go to **Database Access** → **Add New Database User**
+   - Choose **Password** authentication
+   - Username: `transformation-tree-user` (or any name)
+   - Password: Generate a secure password (save it!)
+   - Database User Privileges: **Read and write to any database**
+   - Click **"Add User"**
+
+2. **Whitelist IP Address:**
+   - Go to **Network Access** → **Add IP Address**
+   - Click **"Allow Access from Anywhere"** (adds `0.0.0.0/0`)
+   - Or add specific IPs for better security
+   - Click **"Confirm"**
+
+3. **Get Connection String:**
+   - Go to **Database** → **Connect**
+   - Choose **"Connect your application"**
+   - Driver: **Node.js**, Version: **5.5 or later**
+   - Copy the connection string (looks like: `mongodb+srv://username:password@cluster.mongodb.net/`)
+   - **Replace `<password>`** with your actual database user password
+   - **Add database name** at the end: `?retryWrites=true&w=majority` → `transformation-tree?retryWrites=true&w=majority`
+   - Final string: `mongodb+srv://username:password@cluster.mongodb.net/transformation-tree?retryWrites=true&w=majority`
+
+### 2.3 Deploy Backend to Render
+
+1. Go to [Render.com](https://render.com)
+2. Click **"Get Started for Free"**
 3. Sign up with GitHub (easiest option)
-4. Railway gives you $5/month free credit (usually enough for small apps)
 
-### 2.2 Create New Project
+### 2.4 Create Web Service on Render
 
-1. Click **"New Project"**
-2. Select **"Deploy from GitHub repo"**
-3. Authorize Railway to access your GitHub account
-4. Select your `Transformation-Network-Tree` repository
+1. Click **"New +"** → **"Web Service"**
+2. Connect your GitHub repository
+3. Select your `Transformation-Network-Tree` repository
+4. Configure:
+   - **Name**: `transformation-tree-backend`
+   - **Root Directory**: `server` ⚠️ **IMPORTANT!**
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Plan**: **Free**
+5. Click **"Create Web Service"**
 
-### 2.3 Configure the Service
+### 2.5 Add MongoDB Connection to Render
 
-1. Railway will detect it's a Node.js project
-2. Click on the service that was created
-3. Go to **Settings** tab
-4. Set **Root Directory** to: `server` ⚠️ **IMPORTANT!**
-5. Railway will automatically detect:
-   - **Build Command**: `npm install` (automatic)
-   - **Start Command**: `npm start` (automatic)
-6. No need to set environment variables for PORT (Railway handles it automatically)
+1. In your Render service, go to **Environment** tab
+2. Click **"Add Environment Variable"**
+3. Add:
+   - **Key**: `MONGODB_URI`
+   - **Value**: Your MongoDB Atlas connection string (from step 2.2)
+4. Click **"Save Changes"**
 
-### 2.4 Set Up Persistent Storage (Volume)
+**Important:** Render will automatically redeploy after adding the environment variable.
 
-**⚠️ IMPORTANT:** Railway's default filesystem is ephemeral. You MUST create a volume for persistent storage!
+### 2.6 Advanced Settings (Optional but Recommended)
 
-1. In your service, go to **"Volumes"** tab (or **"Storage"**)
-2. Click **"Create Volume"** or **"Add Volume"**
-3. Configure:
-   - **Mount Path**: `/data` (or `/persistent-data`)
-   - **Size**: 0.5GB (free tier limit - more than enough for your ~100KB data)
-4. Click **"Create"**
+1. Go to **Settings** tab
+2. **Health Check Path**: `/api/health`
+3. **Pre-deployment Commands**: (leave empty)
+4. **Autodeploy**: Yes (enabled)
+5. **Build Filters**: (leave empty/default)
 
-5. **Add Environment Variable:**
-   - Go to **Settings** → **Variables**
-   - Add: `DATA_DIR=/data` (or whatever mount path you chose)
-   - This tells the server to use the volume for data storage
+### 2.7 Wait for Deployment
 
-**Free Tier Limits:**
-- ✅ 0.5GB storage (plenty for your data)
-- ✅ 1 volume per project
-- ✅ Your ~100KB of data will persist permanently!
+- Render will build and deploy (takes 2-5 minutes)
+- You'll see logs in the Render dashboard
+- Check logs to see: `Connected to MongoDB` (confirms database connection)
+- Once done, you'll get a URL like: `https://transformation-tree-backend.onrender.com`
 
-### 2.5 Configure Networking
+### 2.8 Copy Your Backend URL
 
-1. Go to **Settings** → **Networking**
-2. Click **"Generate Domain"** or use the auto-generated domain
-3. Make sure **Public Networking** is enabled
-4. Note the port (usually 3001 or Railway's assigned port)
+**Important:** Copy the full URL (e.g., `https://transformation-tree-backend.onrender.com`)
 
-### 2.6 Get Your Backend URL
+You'll need this in the next step!
 
-1. Go to the **Settings** tab of your service
-2. Under **Domains**, Railway will show your public URL
-3. Copy the full URL (e.g., `https://your-app-production.up.railway.app`)
+### 2.9 Storage Capacity
 
-**Important:** Copy the full URL - you'll need this in the next step!
-
-### 2.7 Storage Capacity
-
-Railway's persistent storage can easily handle:
+MongoDB Atlas Free Tier can easily handle:
 - ✅ 101 ornaments with 200 words each (~100KB total)
-- ✅ Your data will persist across restarts
-- ✅ No data loss after inactivity
+- ✅ 512MB free storage (plenty for your data)
+- ✅ Your data will persist permanently in MongoDB
+- ✅ No data loss after Render restarts or inactivity
 
 ---
 
@@ -124,9 +149,9 @@ Railway's persistent storage can easily handle:
 3. Click **"New repository secret"**
 4. Add:
    - **Name**: `VITE_API_URL`
-   - **Value**: `https://your-backend-url.up.railway.app/api`
+   - **Value**: `https://your-backend-url.onrender.com/api`
    
-   ⚠️ **Replace** `your-backend-url.up.railway.app` with your actual Railway URL!
+   ⚠️ **Replace** `your-backend-url.onrender.com` with your actual Render URL!
    
 5. Click **"Add secret"**
 
@@ -183,17 +208,21 @@ Replace `YOUR_USERNAME` with your GitHub username (e.g., `gyuryeon.github.io/Tra
 ### Backend URL Format
 
 Make sure your `VITE_API_URL` secret is:
-- ✅ `https://your-backend.up.railway.app/api` (with `/api` at the end)
-- ❌ NOT `https://your-backend.up.railway.app` (missing `/api`)
+- ✅ `https://your-backend.onrender.com/api` (with `/api` at the end)
+- ❌ NOT `https://your-backend.onrender.com` (missing `/api`)
 
 ### Free Tier Limitations
 
-**Railway Free Tier:**
-- $5/month free credit (usually enough for small apps)
-- **Persistent storage** - data is saved permanently! ✅
-- **No cold starts** - service stays awake! ⚡
-- Fast deployments
-- Auto-scales based on usage
+**Render Free Tier:**
+- Service may sleep after 15 minutes of inactivity
+- First request after sleep takes ~30 seconds (wake up time)
+- This is normal and free!
+
+**MongoDB Atlas Free Tier:**
+- ✅ 512MB storage (plenty for your ~100KB data)
+- ✅ **Persistent storage** - data saved permanently in MongoDB! ✅
+- ✅ No data loss even when Render sleeps
+- ✅ Free forever (with usage limits)
 
 **GitHub Pages:**
 - Completely free
@@ -206,11 +235,15 @@ Make sure your `VITE_API_URL` secret is:
 
 ### Backend Not Working?
 
-1. Check Railway dashboard for errors
-2. Check backend logs in Railway (click on service → Logs tab)
+1. Check Render dashboard for errors
+2. Check backend logs in Render
 3. Verify the URL in GitHub secret is correct
-4. Make sure Root Directory is set to `server` in Railway settings
-5. Verify persistent storage is working (data should persist after restarts)
+4. Make sure Root Directory is set to `server` in Render settings
+5. **Verify MongoDB connection:**
+   - Check Render logs for `Connected to MongoDB`
+   - Verify `MONGODB_URI` environment variable is set correctly
+   - Check MongoDB Atlas Network Access (IP whitelist)
+   - Verify database user credentials are correct
 
 ### Frontend Can't Connect?
 
@@ -243,17 +276,22 @@ GitHub Actions will automatically rebuild and redeploy! 🚀
 
 ## Quick Checklist
 
+- [ ] MongoDB Atlas account created
+- [ ] MongoDB cluster created and configured
+- [ ] Database user created with password
+- [ ] IP address whitelisted (0.0.0.0/0 for Render)
+- [ ] Connection string copied and password replaced
 - [ ] Code pushed to GitHub
-- [ ] Backend deployed to Railway
-- [ ] Root Directory set to `server` in Railway
-- [ ] **Volume created and mounted** (e.g., `/data`)
-- [ ] **Environment variable `DATA_DIR` set** to volume mount path
-- [ ] Public networking enabled in Railway
-- [ ] Backend URL copied from Railway
+- [ ] Backend deployed to Render
+- [ ] Root Directory set to `server` in Render
+- [ ] **MONGODB_URI environment variable added** to Render
+- [ ] Health Check Path set to `/api/health` in Render
+- [ ] Backend URL copied from Render
 - [ ] `VITE_API_URL` secret added to GitHub
 - [ ] GitHub Pages enabled
 - [ ] Code pushed to trigger deployment
 - [ ] Site is live and working!
+- [ ] MongoDB connection verified in logs
 - [ ] Data persists after restarts (test by restarting service)
 
 ---
@@ -261,6 +299,7 @@ GitHub Actions will automatically rebuild and redeploy! 🚀
 ## Need Help?
 
 - Check [DEPLOYMENT.md](./DEPLOYMENT.md) for more details
-- Check Railway logs if backend isn't working
+- Check Render logs if backend isn't working
+- Check MongoDB Atlas connection if data isn't persisting
 - Check GitHub Actions logs if frontend isn't deploying
 
