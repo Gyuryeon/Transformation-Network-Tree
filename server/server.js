@@ -16,13 +16,13 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' })); // Increase limit for large ornament arrays
 app.use(express.static('public'));
 
-// Data file path
-const DATA_FILE = path.join(__dirname, 'data', 'ornaments.json');
+// Data file path - use volume mount path if available, otherwise local data directory
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'ornaments.json');
 
 // Ensure data directory exists
-const dataDir = path.dirname(DATA_FILE);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
 // Initialize data file if it doesn't exist
